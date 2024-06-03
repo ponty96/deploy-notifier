@@ -39,3 +39,15 @@ clean:
 test: #: Run Go unit tests
 test:
 	GO111MODULE=on $(GO) test -v ./...
+
+### Docker
+
+.PHONY: docker-build
+docker-build: #: Build the Docker image to deploy
+docker-build:
+	docker build --tag ghcr.io/ponty96/$(APP_NAME):$(APP_VSN)-local-build .
+
+.PHONY: docker-push
+docker-push: #: Push local docker image to quay.io
+docker-push:
+	docker push ghcr.io/ponty96/$(APP_NAME):$(APP_VSN)-local-build
