@@ -23,8 +23,8 @@ type K8sEvent struct {
 }
 
 type K8sQueryFilter struct {
-	namespace string
-	context   string
+	Namespace string
+	Context   string
 }
 
 func InitK8sClient(contextName string, kubeConfigPath string) K8sClient {
@@ -44,7 +44,7 @@ func InitK8sClient(contextName string, kubeConfigPath string) K8sClient {
 
 // func (k8sClient *K8sClient) GetEventsForNamespace(queryFilter K8sQueryFilter, eventHandler func(event K8sEvent))
 func (k8sClient *K8sClient) GetEventsForNamespace(queryFilter K8sQueryFilter) {
-	events, err := k8sClient.clientSet.CoreV1().Events(queryFilter.namespace).List(context.TODO(), metav1.ListOptions{TypeMeta: metav1.TypeMeta{Kind: "Pod"}})
+	events, err := k8sClient.clientSet.CoreV1().Events(queryFilter.Namespace).List(context.TODO(), metav1.ListOptions{TypeMeta: metav1.TypeMeta{Kind: "Pod"}})
 	if err != nil {
 		panic(err.Error())
 	}
