@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-notifier-deployment
+  labels:
+    app: deploy-notifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deploy-notifier
+  template:
+    metadata:
+      labels:
+        app: deploy-notifier
+    spec:
+      serviceAccountName: list-watch-sa
+      containers:
+        - name: deploy-notifier-container
+          image: ghcr.io/ponty96/deploy-notifier:9b4e44a-local-build
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          env:
+            - name: ENV_VAR1
+              value: "value1"
+            - name: ENV_VAR2
+              value: "value2"
+            # - name: ENV_VAR3
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: my-secret
+            #       key: secret-key
+      imagePullSecrets:
+        - name: dockerconfigjson-github-com

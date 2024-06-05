@@ -56,6 +56,7 @@ func (k8sClient *K8sClient) GetEventsForNamespace(queryFilter K8sQueryFilter) {
 			Action:          event.Action,
 		}
 		zap.L().Sugar().Infof("PodName: %v", myEvent.Name)
+		zap.L().Sugar().Infof("Namespace: %v", myEvent.Action)
 	}
 }
 
