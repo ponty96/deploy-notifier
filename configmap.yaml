@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deploy-notifier-config
+  namespace: default
+data:
+  deploy-notifier-config.yaml: |
+    namespace: "default"
+    context: ""
+    handlers:
+      - slack:
+          webhook_url: "https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX"
+          channel: "#my-channel"
+          username: "deploy-notifier"
+          icon_emoji: ":rocket:"
