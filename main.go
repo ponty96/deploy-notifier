@@ -20,6 +20,13 @@ func main() {
 
 	zap.L().Info("Hello from Zap logger!")
 
-	k8sClient := k8s.InitK8sClient("", "")
+	go func() {
+		httpServer := HTTPServer{}
+		httpServer.serveHTTP()
+	}()
+
+	context := os.Getenv("K8S_CONTEXT")
+	kubeConfigPath := os.Getenv("KUBECONFIG")
+	k8sClient := k8s.InitK8sClient(context, kubeConfigPath)
 	k8sClient.GetEventsForNamespace(k8s.K8sQueryFilter{Namespace: "default", Context: ""})
 }
