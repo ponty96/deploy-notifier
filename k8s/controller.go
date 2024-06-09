@@ -66,6 +66,7 @@ func NewController(
 	var err error
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
+			zap.L().Sugar().Infof("AddFunc: %v", obj)
 			fmt.Println(obj)
 			// var ok bool
 			newEvent.Action = "create"

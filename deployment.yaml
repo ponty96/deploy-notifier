@@ -17,7 +17,7 @@ spec:
       serviceAccountName: list-watch-sa
       containers:
         - name: deploy-notifier-container
-          image: ghcr.io/ponty96/deploy-notifier:26bd6c2-local-build
+          image: ghcr.io/ponty96/deploy-notifier:9e3453d-local-build
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
