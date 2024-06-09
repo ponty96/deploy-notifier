@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -25,8 +26,8 @@ type K8sEvent struct {
 	Namespace       string
 	ResourceVersion string
 	ResourceType    string
-	Object          interface{}
-	Key             string
+	// Object          runtime.Object
+	Key string
 }
 
 type K8sController struct {
@@ -66,17 +67,18 @@ func NewController(
 	var err error
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			zap.L().Sugar().Infof("AddFunc: %v", obj)
-			fmt.Println(obj)
+			pod := obj.(*v1.Pod)
+			zap.L().Sugar().Info("I got into the AddFunc:")
 			// var ok bool
 			newEvent.Action = "create"
-			// newEvent.Namespace = obj.ObjectMeta.Namespace // namespace retrived in processItem incase namespace value is empty
-			// newEvent.Key, err = cache.MetaNamespaceKeyFunc(obj)
-			// newEvent.ResourceVersion = obj.InvolvedObject.ResourceVersion
-			// newEvent.ResourceType = obj.TypeMeta.Kind
-			// newEvent.APIVersion = obj.TypeMeta.APIVersion
+			newEvent.Namespace = pod.ObjectMeta.Namespace // namespace retrived in processItem incase namespace value is empty
+			newEvent.Key, err = cache.MetaNamespaceKeyFunc(obj)
+			newEvent.ResourceVersion = pod.ObjectMeta.ResourceVersion
+			newEvent.ResourceType = pod.TypeMeta.Kind
+			newEvent.APIVersion = pod.TypeMeta.APIVersion
+			newEvent.Name = pod.ObjectMeta.Name
 
-			// newEvent.obj, ok = obj.(runtime.Object)
+			zap.L().Sugar().Infof("Pod name is:  %v", newEvent.Name)
 
 			if err == nil {
 				queue.Add(newEvent)
