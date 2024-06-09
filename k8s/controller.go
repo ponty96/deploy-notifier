@@ -67,6 +67,7 @@ func NewController(
 	var err error
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
+			zap.L().Sugar().Info("I got into the AddFunc:")
 			pod := obj.(*v1.Pod)
 			zap.L().Sugar().Info("I got into the AddFunc:")
 			// var ok bool
@@ -131,6 +132,7 @@ func (c *K8sController) Run(stopCh <-chan struct{}) {
 		return
 	}
 
+	zap.L().Sugar().Info("Controller is now running")
 	wait.Until(c.runWorker, time.Second, stopCh)
 }
 
