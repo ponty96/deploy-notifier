@@ -1,79 +1,62 @@
 package k8s
 
 import (
-	"context"
-	"os"
+	"fmt"
+	"time"
 
-	"go.uber.org/zap"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/informers"
 )
 
-type K8sClient struct {
-	clientSet *kubernetes.Clientset
+type K8s struct {
+	client      K8sClient
+	controllers []K8sController
 }
 
-type K8sEvent struct {
-	Name            string
-	Namespace       string
-	ResourceVersion string
-	Action          string
+type Resource struct {
+	Deployment            bool `json:"deployment"`
+	ReplicationController bool `json:"rc"`
+	ReplicaSet            bool `json:"rs"`
+	DaemonSet             bool `json:"ds"`
+	StatefulSet           bool `json:"statefulset"`
+	Services              bool `json:"svc"`
+	Pod                   bool `json:"po"`
+	Job                   bool `json:"job"`
+	Node                  bool `json:"node"`
+	ClusterRole           bool `json:"clusterrole"`
+	ClusterRoleBinding    bool `json:"clusterrolebinding"`
+	ServiceAccount        bool `json:"sa"`
+	PersistentVolume      bool `json:"pv"`
+	Namespace             bool `json:"ns"`
+	Secret                bool `json:"secret"`
+	ConfigMap             bool `json:"configmap"`
+	Ingress               bool `json:"ing"`
+	HPA                   bool `json:"hpa"`
+	Event                 bool `json:"event"`
+	CoreEvent             bool `json:"coreevent"`
 }
 
-type K8sQueryFilter struct {
-	Namespace string
-	Context   string
+type K8sConfig struct {
+	ContextName string
+	KubeConfig  string
+	ResourceTM  Resource
+	Namespace   string
 }
 
-func InitK8sClient(contextName string, kubeConfigPath string) K8sClient {
-	// context := os.Getenv("K8S_CONTEXT")
-	// kubeConfigPath := os.Getenv("KUBECONFIG")
+func Setup(k8sCfonfig K8sConfig) {
+	// Connect to k8s
+	client := InitK8sClient(k8sCfonfig.ContextName, k8sCfonfig.KubeConfig)
+	if k8sCfonfig.ResourceTM.Pod {
+		informerFactory := informers.NewSharedInformerFactory(client.clientSet, time.Minute*10)
+		informer := informerFactory.Core().V1().Pods().Informer()
 
-	config, err := buildClusterConfig(contextName, kubeConfigPath)
-	if err != nil {
-		panic(err)
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err)
-	}
-	return K8sClient{clientSet: clientset}
-}
+		c := NewController(client, eventHandler, informer)
+		stopAllPodsCh := make(chan struct{})
+		defer close(stopAllPodsCh)
 
-// func (k8sClient *K8sClient) GetEventsForNamespace(queryFilter K8sQueryFilter, eventHandler func(event K8sEvent))
-func (k8sClient *K8sClient) GetEventsForNamespace(queryFilter K8sQueryFilter) {
-	events, err := k8sClient.clientSet.CoreV1().Events(queryFilter.Namespace).List(context.TODO(), metav1.ListOptions{TypeMeta: metav1.TypeMeta{Kind: "Pod"}})
-	if err != nil {
-		panic(err.Error())
-	}
-	for _, event := range events.Items {
-		myEvent := K8sEvent{
-			Name:            event.ObjectMeta.Name,
-			Namespace:       event.ObjectMeta.Namespace,
-			ResourceVersion: event.InvolvedObject.ResourceVersion,
-			Action:          event.Action,
-		}
-		zap.L().Sugar().Infof("PodName: %v", myEvent.Name)
-		zap.L().Sugar().Infof("Namespace: %v", myEvent.Action)
+		go c.Run(stopAllPodsCh)
 	}
 }
 
-func buildClusterConfig(context string, kubeconfig string) (*rest.Config, error) {
-	userHomeDir, err := os.UserHomeDir()
-	if kubeconfig == "" && err != nil {
-		kubeconfig = userHomeDir + "/.kube/config"
-	}
-
-	if kubeconfig != "" {
-		return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-			&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig},
-			&clientcmd.ConfigOverrides{CurrentContext: context},
-		).ClientConfig()
-	} else {
-		zap.L().Sugar().Warn("No kubeconfig path provided, using in-cluster config")
-		// if we can't get the home dir and no config is passed, use in-cluster config
-		return rest.InClusterConfig()
-	}
+func eventHandler(event K8sEvent) {
+	fmt.Printf("Event: %v\n", event)
 }

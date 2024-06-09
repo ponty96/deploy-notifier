@@ -27,6 +27,15 @@ func main() {
 
 	context := os.Getenv("K8S_CONTEXT")
 	kubeConfigPath := os.Getenv("KUBECONFIG")
-	k8sClient := k8s.InitK8sClient(context, kubeConfigPath)
-	k8sClient.GetEventsForNamespace(k8s.K8sQueryFilter{Namespace: "default", Context: ""})
+
+	k8sConfig := k8s.K8sConfig{
+		ContextName: context,
+		KubeConfig:  kubeConfigPath,
+		ResourceTM: k8s.Resource{
+			Pod: true,
+		},
+		Namespace: "default",
+	}
+	k8s.Setup(k8sConfig)
+	// k8sClient.GetEventsForNamespace(k8s.K8sQueryFilter{Namespace: "default", Context: ""})
 }
