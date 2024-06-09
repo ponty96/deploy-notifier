@@ -1,6 +1,8 @@
 package k8s
 
 import (
+	"time"
+
 	"go.uber.org/zap"
 	"k8s.io/client-go/informers"
 )
@@ -45,7 +47,7 @@ func Setup(k8sCfonfig K8sConfig) {
 	client := InitK8sClient(k8sCfonfig.ContextName, k8sCfonfig.KubeConfig)
 	if k8sCfonfig.ResourceTM.Pod {
 		zap.L().Sugar().Infof("ResourceTM Pods")
-		informerFactory := informers.NewSharedInformerFactory(client.clientSet, 0)
+		informerFactory := informers.NewSharedInformerFactory(client.clientSet, time.Minute*10)
 		zap.L().Sugar().Infof("InformerFactory: %v", informerFactory)
 		informer := informerFactory.Core().V1().Pods().Informer()
 		zap.L().Sugar().Infof("informer: %v", informer)
