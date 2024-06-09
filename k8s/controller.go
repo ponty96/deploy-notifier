@@ -122,6 +122,7 @@ func NewController(
 }
 
 func (c *K8sController) Run(stopCh <-chan struct{}) {
+	zap.L().Sugar().Info("Run")
 	defer runtime.HandleCrash()
 	defer c.workqueue.ShutDown()
 

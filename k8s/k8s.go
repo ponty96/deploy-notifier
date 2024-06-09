@@ -54,6 +54,7 @@ func Setup(k8sCfonfig K8sConfig) {
 		stopAllPodsCh := make(chan struct{})
 		defer close(stopAllPodsCh)
 
+		zap.L().Sugar().Infof("Starting controller %v", c)
 		go c.Run(stopAllPodsCh)
 	}
 }
