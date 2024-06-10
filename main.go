@@ -20,11 +20,6 @@ func main() {
 
 	zap.L().Info("Hello from Zap logger!")
 
-	go func() {
-		httpServer := HTTPServer{}
-		httpServer.serveHTTP()
-	}()
-
 	context := os.Getenv("K8S_CONTEXT")
 	kubeConfigPath := os.Getenv("KUBECONFIG")
 
@@ -37,5 +32,8 @@ func main() {
 		Namespace: "default",
 	}
 	k8s.Setup(k8sConfig)
+
+	httpServer := HTTPServer{}
+	httpServer.serveHTTP()
 	// k8sClient.GetEventsForNamespace(k8s.K8sQueryFilter{Namespace: "default", Context: ""})
 }
