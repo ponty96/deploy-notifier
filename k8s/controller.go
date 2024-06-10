@@ -128,7 +128,7 @@ func (c *K8sController) Run(stopCh <-chan struct{}) {
 
 	go c.informer.Run(stopCh)
 
-	if !cache.WaitForCacheSync(stopCh, c.informer.HasSynced) {
+	if !cache.WaitForCacheSync(stopCh, c.HasSynced) {
 		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
 		return
 	}
@@ -137,6 +137,10 @@ func (c *K8sController) Run(stopCh <-chan struct{}) {
 	wait.Until(c.runWorker, time.Second, stopCh)
 }
 
+// HasSynced is required for the cache.Controller interface.
+func (c *K8sController) HasSynced() bool {
+	return c.informer.HasSynced()
+}
 func (c *K8sController) processNextItem() bool {
 	k8sEvent, shutdown := c.workqueue.Get()
 	if shutdown {

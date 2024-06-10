@@ -67,7 +67,7 @@ func Setup(k8sCfonfig K8sConfig) {
 					return client.clientSet.CoreV1().Pods(k8sCfonfig.Namespace).Watch(context.Background(), options)
 				},
 			},
-			&api_v1.Event{},
+			&api_v1.Pod{},
 			time.Minute,
 			cache.Indexers{},
 		)
