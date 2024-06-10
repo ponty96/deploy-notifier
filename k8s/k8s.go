@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"time"
 
 	"go.uber.org/zap"
 	api_v1 "k8s.io/api/core/v1"
@@ -67,7 +68,7 @@ func Setup(k8sCfonfig K8sConfig) {
 				},
 			},
 			&api_v1.Event{},
-			0, //Skip resync
+			time.Minute,
 			cache.Indexers{},
 		)
 
