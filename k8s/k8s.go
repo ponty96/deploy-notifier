@@ -1,10 +1,14 @@
 package k8s
 
 import (
-	"time"
+	"context"
 
 	"go.uber.org/zap"
-	"k8s.io/client-go/informers"
+	api_v1 "k8s.io/api/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/tools/cache"
 )
 
 type K8s struct {
@@ -47,10 +51,25 @@ func Setup(k8sCfonfig K8sConfig) {
 	client := InitK8sClient(k8sCfonfig.ContextName, k8sCfonfig.KubeConfig)
 	if k8sCfonfig.ResourceTM.Pod {
 		zap.L().Sugar().Infof("ResourceTM Pods")
-		informerFactory := informers.NewSharedInformerFactory(client.clientSet, time.Minute*10)
-		zap.L().Sugar().Infof("InformerFactory: %v", informerFactory)
-		informer := informerFactory.Core().V1().Pods().Informer()
-		zap.L().Sugar().Infof("informer: %v", informer)
+		// informerFactory := informers.NewSharedInformerFactory(client.clientSet, time.Minute*10)
+		// zap.L().Sugar().Infof("InformerFactory: %v", informerFactory)
+		// informer := informerFactory.Core().V1().Pods().Informer()
+		// zap.L().Sugar().Infof("informer: %v", informer)
+		informer := cache.NewSharedIndexInformer(
+			&cache.ListWatch{
+				ListFunc: func(options meta_v1.ListOptions) (runtime.Object, error) {
+					options.FieldSelector = ""
+					return client.clientSet.CoreV1().Pods(k8sCfonfig.Namespace).List(context.Background(), options)
+				},
+				WatchFunc: func(options meta_v1.ListOptions) (watch.Interface, error) {
+					options.FieldSelector = ""
+					return client.clientSet.CoreV1().Pods(k8sCfonfig.Namespace).Watch(context.Background(), options)
+				},
+			},
+			&api_v1.Event{},
+			0, //Skip resync
+			cache.Indexers{},
+		)
 
 		c := NewController(client, eventHandler, informer)
 		stopAllPodsCh := make(chan struct{})
