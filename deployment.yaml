@@ -17,19 +17,33 @@ spec:
       serviceAccountName: list-watch-sa
       containers:
         - name: deploy-notifier-container
-          image: ghcr.io/ponty96/deploy-notifier:9b4e44a-local-build
+          image: ghcr.io/ponty96/deploy-notifier:1bb9315-local-build
           imagePullPolicy: Always
           ports:
-            - containerPort: 80
-          env:
-            - name: ENV_VAR1
-              value: "value1"
-            - name: ENV_VAR2
-              value: "value2"
-            # - name: ENV_VAR3
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: my-secret
-            #       key: secret-key
+            - containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/deploy-notifier-config.yaml
+              # readOnly: true
+              subPath: deploy-notifier-config.yaml
+          # startupProbe:
+          #   httpGet:
+          #     path: /health-check
+          #     port: 8080
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 5
+          #   failureThreshold: 30
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health-check
+          #     port: 8080
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
+          #   timeoutSeconds: 2
+          #   failureThreshold: 3
       imagePullSecrets:
         - name: dockerconfigjson-github-com
+      volumes:
+        - name: config-volume
+          configMap:
+            name: deploy-notifier-config
